@@ -39,7 +39,7 @@ data "kubernetes_secret" "fgt_connector" {
 }
 
 resource "fortios_json_generic_api" "kube_cluster" {
-  depends_on = [ fortios_firewall_ldbmonitor.ping-mon ]
+  depends_on = [ time_sleep.wait_for_vip ]
 
   path   = "/api/v2/cmdb/system/sdn-connector"
   method = "POST"
