@@ -3,7 +3,7 @@ variable "module_depends_on" {
   default = []
 }
 
-resource "fortios_firewall_ldbmonitor" "ping-mon" {
+resource "fortios_firewall_ldbmonitor" "ping_mon" {
   depends_on         = [ var.module_depends_on ]
 
   interval           = 10
@@ -13,15 +13,22 @@ resource "fortios_firewall_ldbmonitor" "ping-mon" {
   type               = "ping"
 }
 
-resource "fortios_firewall_vip" "vip" {
+resource "time_sleep" "wait_for_ping_mon" {
+  depends_on      = [ fortios_firewall_ldbmonitor.ping_mon ]
+  create_duration  = "20s"
+  destroy_duration = "20s"
+}
 
-  name    = "lb-${var.cluster_name}"
-  comment = ""
-  type    = "server-load-balance"
-  extip   = var.lb_extip
-  extport = 6443
-  extintf = "any"
-  server_type = "https"
+resource "fortios_firewall_vip" "vip" {
+  depends_on  = [ time_sleep.wait_for_ping_mon ]
+  
+  name           = "lb-${var.cluster_name}"
+  comment        = ""
+  type           = "server-load-balance"
+  extip          = var.lb_extip
+  extport        = 6443
+  extintf        = "any"
+  server_type    = "https"
   http_ip_header = "enable"
   monitor {
     name = "ping-mon-${var.cluster_name}"
@@ -41,8 +48,14 @@ resource "fortios_firewall_vip" "vip" {
   ssl_mode = "full"
 }
 
-resource "fortios_firewall_policy" "kube_cluster" {
+resource "time_sleep" "wait_for_vip" {
   depends_on      = [ fortios_firewall_vip.vip ]
+  create_duration  = "20s"
+  destroy_duration = "20s"
+}
+
+resource "fortios_firewall_policy" "kube_cluster" {
+  depends_on      = [ time_sleep.wait_for_vip ]
 
   action          = "accept"
   name            = var.cluster_name
