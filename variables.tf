@@ -1,9 +1,17 @@
-variable "forti_hostname"             { type = string   }
-variable "forti_token"                { type = string   }
 variable "cluster_name"               { type = string   }
 variable "cluster_hosts"              { type = map(any) }
 variable "lb_extip"                   { type = string   }
 variable "lb_dstintf"                 { type = string   }
+
+variable "forti_hostname" {
+  type      = string
+  sensitive = true
+}
+
+variable "forti_token" {
+  type     = string
+  sensitive = true
+}
 
 variable "k8s_host" {
   type      = string
